@@ -1,0 +1,5 @@
+%{
+  "bbmustache": {:hex, :bbmustache, "1.12.2", "0cabdce0db9fe6d3318131174b9f2b351328a4c0afbeb3e6e99bb0e02e9b621d", [:rebar3], [], "hexpm", "688b33a4d5cc2d51f575adf0b3683fc40a38314a2f150906edcfc77f5b577b3b"},
+  "dialyxir": {:hex, :dialyxir, "1.4.3", "edd0124f358f0b9e95bfe53a9fcf806d615d8f838e2202a9f430d59566b6b53b", [:mix], [{:erlex, ">= 0.2.6", [hex: :erlex, repo: "hexpm", optional: false]}], "hexpm", "bf2cfb75cd5c5006bec30141b131663299c661a864ec7fbbc72dfa557487a986"},
+  "erlex": {:hex, :erlex, "0.2.6", "c7987d15e899c7a2f34f5420d2a2ea0d659682c06ac607572df55a43753aa12e", [:mix], [], "hexpm", "2ed2e25711feb44d52b17d2780eabf998452f6efda104877a3881c2f8c0c0c75"},
+}
