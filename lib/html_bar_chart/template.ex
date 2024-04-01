@@ -21,11 +21,8 @@ defmodule HtmlBarChart.Template do
     alias HtmlBarChart.Template.XAxisCell
 
     @type t :: %__MODULE__{
-            # When embedding lists of data, rather than simply using a list of
-            # structs, each struct gets wrapped in a map. This makes referencing
-            # the variable within a loop in the Mustache template less ambiguous
-            grid_rows: [%{grid_row: GridRow.t()}],
-            x_axis_cells: [%{x_axis_cell: XAxisCell.t()}],
+            grid_rows: [GridRow.t()],
+            x_axis_cells: [XAxisCell.t()],
             x_axis_label_height: pos_integer(),
             series_indicator_height: pos_integer(),
             x_axis_height: pos_integer(),
@@ -37,19 +34,7 @@ defmodule HtmlBarChart.Template do
             bar_width: pos_integer()
           }
 
-    @enforce_keys [
-      :grid_rows,
-      :x_axis_cells,
-      :x_axis_label_height,
-      :series_indicator_height,
-      :x_axis_height,
-      :y_axis_label_width,
-      :grid_cell_height,
-      :edge_width,
-      :bar_gap_width,
-      :series_gap_width,
-      :bar_width
-    ]
+    @enforce_keys ~w(grid_rows x_axis_cells x_axis_label_height series_indicator_height x_axis_height y_axis_label_width grid_cell_height edge_width bar_gap_width series_gap_width bar_width)a
     defstruct @enforce_keys
   end
 
@@ -58,7 +43,7 @@ defmodule HtmlBarChart.Template do
 
     @type t :: %__MODULE__{
             label: String.t(),
-            grid_cells: [%{grid_cell: GridCell.t()}],
+            grid_cells: [GridCell.t()],
             first?: boolean(),
             last?: boolean()
           }
@@ -149,6 +134,9 @@ defmodule HtmlBarChart.Template do
     }
   end
 
+  @spec prepare(template :: t()) :: map()
+  def prepare(template), do: template |> Map.from_struct() |> prepare_template(false)
+
   @spec col_count(data :: Data.t()) :: pos_integer()
   defp col_count(data) do
     y_axis_and_edges_count = 3
@@ -203,24 +191,22 @@ defmodule HtmlBarChart.Template do
     |> trunc()
   end
 
-  @spec grid_rows(Config.t(), Data.t()) :: [%{grid_row: GridRow.t()}]
+  @spec grid_rows(Config.t(), Data.t()) :: [GridRow.t()]
   defp grid_rows(config, %Data{axis_ticks: axis_ticks} = data) do
     axis_ticks
     |> Enum.reverse()
     |> Enum.with_index()
     |> Enum.map(fn {%Data.Tick{label: label} = tick, index} ->
-      %{
-        grid_row: %GridRow{
-          label: label,
-          grid_cells: grid_cells(config, data, tick),
-          first?: index == 0,
-          last?: index == Enum.count(axis_ticks) - 1
-        }
+      %GridRow{
+        label: label,
+        grid_cells: grid_cells(config, data, tick),
+        first?: index == 0,
+        last?: index == Enum.count(axis_ticks) - 1
       }
     end)
   end
 
-  @spec grid_cells(Config.t(), Data.t(), Data.Tick.t()) :: [%{grid_cell: GridCell.t()}]
+  @spec grid_cells(Config.t(), Data.t(), Data.Tick.t()) :: [GridCell.t()]
   defp grid_cells(
          config,
          %Data{series: series} = data,
@@ -233,10 +219,7 @@ defmodule HtmlBarChart.Template do
       |> Enum.intersperse(GridCell.bar_gap_cell())
     end)
     |> Enum.intersperse(GridCell.series_gap_cell())
-    |> Enum.flat_map(fn
-      %GridCell{} = cell -> [%{grid_cell: cell}]
-      cells -> Enum.map(cells, &%{grid_cell: &1})
-    end)
+    |> List.flatten()
   end
 
   @spec bar_cell(Config.t(), Data.t(), Data.Point.t(), FloatRange.t()) :: GridCell.t()
@@ -252,12 +235,11 @@ defmodule HtmlBarChart.Template do
     end
   end
 
-  @spec x_axis_cells(Config.t(), Data.t()) :: [%{x_axis_cell: XAxisCell.t()}]
+  @spec x_axis_cells(Config.t(), Data.t()) :: [XAxisCell.t()]
   defp x_axis_cells(config, %Data{series: series} = data) do
     series
     |> Enum.map(&x_axis_cell(config, data, &1))
     |> Enum.intersperse(XAxisCell.series_gap_cell())
-    |> Enum.map(&%{x_axis_cell: &1})
   end
 
   @spec x_axis_cell(Config.t(), Data.t(), Data.Series.t()) :: XAxisCell.t()
@@ -270,5 +252,37 @@ defmodule HtmlBarChart.Template do
     colspan = 2 * bar_count - 1
     width = bar_count * bar_width(config, data) + (bar_count - 1) * gap_width
     XAxisCell.series_label_cell(width, colspan, label)
+  end
+
+  # The Mustache template engine creates a new "context" for accessing variables
+  # when using an if/for-loop "block." This makes accessing values from the parent
+  # context a little tricky. By wrapping nested structs in a simple map, it makes
+  # explicitly referring to them in Mustache easier
+  @spec prepare_template(term :: term(), list_item? :: boolean()) :: term()
+  defp prepare_template(%{__struct__: name} = struct, true) do
+    name = struct_name(name)
+    data = struct |> Map.from_struct() |> prepare_template(false)
+    Map.new([{name, data}])
+  end
+
+  defp prepare_template(list, _) when is_list(list),
+    do: Enum.map(list, &prepare_template(&1, true))
+
+  defp prepare_template(struct, _) when is_struct(struct),
+    do: struct |> Map.from_struct() |> prepare_template(false)
+
+  defp prepare_template(map, _) when is_map(map),
+    do: Map.new(map, fn {key, value} -> {key, prepare_template(value, false)} end)
+
+  defp prepare_template(value, _), do: value
+
+  @spec struct_name(module_name :: atom()) :: atom()
+  defp struct_name(module_name) do
+    module_name = module_name |> Atom.to_string() |> String.split(".") |> List.last()
+
+    ~r/(?<!^)(?=[A-Z])/
+    |> Regex.replace(module_name, "_")
+    |> String.downcase()
+    |> String.to_atom()
   end
 end

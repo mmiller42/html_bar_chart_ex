@@ -3,9 +3,9 @@ defmodule HtmlBarChart do
           {:singular_label, String.t()}
           | {:plural_label, String.t()}
           | {:precision, Float.precision_range()}
-  @type format_tick_label_opts :: [format_tick_label_opt()]
 
-  @spec format_tick_label(range :: FloatRange.t(), opts :: format_tick_label_opts()) :: String.t()
+  @spec format_tick_label(range :: FloatRange.t(), opts :: [format_tick_label_opt()]) ::
+          String.t()
   def format_tick_label(%FloatRange{first: first}, opts) do
     singular_label = Keyword.fetch!(opts, :singular_label)
     plural_label = Keyword.fetch!(opts, :plural_label)

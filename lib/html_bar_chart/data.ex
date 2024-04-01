@@ -3,6 +3,14 @@ defmodule HtmlBarChart.Data do
   alias HtmlBarChart.Data.Series
   alias HtmlBarChart.Data.Tick
 
+  @type t :: %__MODULE__{
+          series: [Series.t()],
+          axis_ticks: [Tick.t()]
+        }
+
+  @enforce_keys [:series, :axis_ticks]
+  defstruct @enforce_keys
+
   defmodule Series do
     alias HtmlBarChart.Data.Point
 
@@ -70,14 +78,6 @@ defmodule HtmlBarChart.Data do
     @spec ceil_to(value :: float(), multiple :: float()) :: float()
     defp ceil_to(value, multiple), do: Float.ceil(value / multiple) * multiple
   end
-
-  @type t :: %__MODULE__{
-          series: [Series.t()],
-          axis_ticks: [Tick.t()]
-        }
-
-  @enforce_keys [:series, :axis_ticks]
-  defstruct @enforce_keys
 
   @spec new(series :: [Series.t()], config :: Config.t()) :: t()
   def new(series, config),

@@ -13,19 +13,7 @@ defmodule HtmlBarChart.Config do
           format_y_axis_tick_label: (FloatRange.t() -> String.t())
         }
 
-  @enforce_keys [
-    :width,
-    :height,
-    :y_axis_label_width,
-    :x_axis_label_height,
-    :series_indicator_height,
-    :edge_width,
-    :bar_gap_width,
-    :series_gap_width,
-    :min_grid_height,
-    :y_axis_min_tick_step,
-    :format_y_axis_tick_label
-  ]
+  @enforce_keys ~w(width height y_axis_label_width x_axis_label_height series_indicator_height edge_width bar_gap_width series_gap_width min_grid_height y_axis_min_tick_step format_y_axis_tick_label)a
   defstruct @enforce_keys
 
   @spec grid_width(config :: t()) :: pos_integer()

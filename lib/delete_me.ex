@@ -3,6 +3,7 @@ defmodule DeleteMe do
   alias HtmlBarChart.DualComparisonChart
   alias HtmlBarChart.DualComparisonChart.Category
   alias HtmlBarChart.DualComparisonChart.Series
+  alias HtmlBarChart.Template
 
   @spec config() :: Config.t()
   def config do
@@ -43,14 +44,16 @@ defmodule DeleteMe do
 
   def test do
     params =
-      DualComparisonChart.new(
-        config(),
-        "Living Room",
-        "HVAC April usage",
-        categories(),
-        april_data(),
-        march_data()
-      )
+      %DualComparisonChart{
+        config: config(),
+        title: "Living Room",
+        subtitle: "HVAC April usage",
+        categories: categories(),
+        primary_series: april_data(),
+        secondary_series: march_data()
+      }
+      |> DualComparisonChart.template()
+      |> Template.prepare()
       |> IO.inspect()
 
     html = :bbmustache.render(HtmlBarChart.mustache_template(), params, key_type: :atom)

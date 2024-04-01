@@ -4,7 +4,7 @@ defmodule HtmlBarChart.Legend do
   @type t :: %__MODULE__{
           title: String.t(),
           subtitle: String.t(),
-          legend_keys: [%{legend_key: LegendKey.t()}]
+          legend_keys: [LegendKey.t()]
         }
 
   @type key_tuple :: {color :: String.t(), label :: String.t()}
@@ -28,12 +28,10 @@ defmodule HtmlBarChart.Legend do
         keys
         |> Enum.with_index()
         |> Enum.map(fn {{color, label}, index} ->
-          %{
-            legend_key: %LegendKey{
-              label: label,
-              color: color,
-              last?: index == Enum.count(keys) - 1
-            }
+          %LegendKey{
+            label: label,
+            color: color,
+            last?: index == Enum.count(keys) - 1
           }
         end)
     }

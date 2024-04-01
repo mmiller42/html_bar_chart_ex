@@ -15,32 +15,32 @@ defmodule FloatRange do
   Examples:
 
     iex> range = FloatRange.new(0.0, 3.5)
-    %FloatRange(0.0..3.5//3.5)
+    %FloatRange{first: 0.0, last: 3.5, step: 3.5}
     iex> Enum.to_list(range)
     [0.0, 3.5]
 
     iex> range = FloatRange.new(0, 3.5, 0.5)
-    %FloatRange(0.0..3.5//0.5)
+    %FloatRange{first: 0.0, last: 3.5, step: 0.5}
     iex> Enum.to_list(range)
     [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5]
 
     iex> range = FloatRange.new(1.5, 3.5, 0.75)
-    %FloatRange(1.5..3.5//0.75)
+    %FloatRange{first: 1.5, last: 3.5, step: 0.75}
     iex> Enum.to_list(range)
     [1.5, 2.25, 3.0]
 
     iex> range = FloatRange.new(1.5, 3.5, 3)
-    %FloatRange(1.5..3.5//3.0)
+    %FloatRange{first: 1.5, last: 3.5, step: 3.0}
     iex> Enum.to_list(range)
     [1.5]
 
     iex> range = FloatRange.new(1.0, -3.5)
-    %FloatRange(1.0..-3.5/-3.5)
+    %FloatRange{first: 1.0, last: -3.5, step: -4.5}
     iex> Enum.to_list(range)
     [1.0, -3.5]
 
     iex> range = FloatRange.new(1.0, -3.5, -1.0)
-    %FloatRange(1.0..-3.5//-1.0)
+    %FloatRange{first: 1.0, last: -3.5, step: -1.0}
     iex> Enum.to_list(range)
     [1.0, 0.0, -1.0, -2.0, -3.0]
   """
@@ -63,19 +63,19 @@ defmodule FloatRange do
   def new(first, last, step)
       when is_float(first) and is_float(last) and is_float(step) and step == 0 do
     raise ArgumentError,
-          "ranges (first..last//step) expect step not to be 0, got: #{print(first, last, step)}"
+          "FloatRange expects step not to be 0, got: #{inspect(%__MODULE__{first: first, last: last, step: step})}"
   end
 
   def new(first, last, step)
       when is_float(first) and is_float(last) and is_float(step) and first < last and step < 0 do
     raise ArgumentError,
-          "ranges (first..last//step) expect step to be > 0 when first < last, got: #{print(first, last, step)}"
+          "FloatRange expects step to be > 0 when first < last, got: #{inspect(%__MODULE__{first: first, last: last, step: step})}"
   end
 
   def new(first, last, step)
       when is_float(first) and is_float(last) and is_float(step) and first > last and step > 0 do
     raise ArgumentError,
-          "ranges (first..last//step) expect step to be < 0 when first > last, got: #{print(first, last, step)}"
+          "FloatRange expects step to be < 0 when first > last, got: #{inspect(%__MODULE__{first: first, last: last, step: step})}"
   end
 
   def new(first, last, step) when is_float(first) and is_float(last) and is_float(step) do
@@ -91,9 +91,6 @@ defmodule FloatRange do
     |> abs()
     |> Kernel.+(1)
   end
-
-  defp print(first, last, step),
-    do: "%FloatRange(#{inspect(first)}..#{inspect(last)}//#{inspect(step)})"
 end
 
 defimpl Enumerable, for: FloatRange do
@@ -166,22 +163,4 @@ defimpl Enumerable, for: FloatRange do
 
   defp do_slice(current, step, remaining),
     do: [current | do_slice(current + step, step, remaining - 1)]
-end
-
-defimpl Inspect, for: FloatRange do
-  import Inspect.Algebra
-  import Kernel, except: [inspect: 2]
-
-  @spec inspect(range :: FloatRange.t(), opts :: Inspect.Opts.t()) :: Inspect.Algebra.t()
-  def inspect(%FloatRange{first: first, last: last, step: step}, opts) do
-    concat([
-      "%FloatRange(",
-      to_doc(first, opts),
-      "..",
-      to_doc(last, opts),
-      "//",
-      to_doc(step, opts),
-      ")"
-    ])
-  end
 end
